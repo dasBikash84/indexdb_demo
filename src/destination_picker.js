@@ -16,7 +16,7 @@ export default function DestinationPicker() {
   const [stations, setStations] = useState([]);
 
   const [fromInput, setFromInput] = useState();
-  const [toInput, setToInput] = useState([]);
+  const [toInput, setToInput] = useState();
 
   useEffect(() => {
     (async () => {
@@ -56,7 +56,6 @@ export default function DestinationPicker() {
 
   const fromText = fromDistrict?.title || fromStation?.title;
   const toText = toDistrict?.title || toStation?.title;
-  console.log(destStations);
   return (
     <>
       <br></br>
@@ -81,9 +80,15 @@ export default function DestinationPicker() {
         name="to"
         value={toText ?? toInput}
         onChange={toInputHandler}
-        disabled={!fromText && !toText}
+        disabled={!fromText || toText}
       />
-      {toText ? `${toDistrict ? " District" : " Station"}` : ""}
+      {toText
+        ? `${
+            toDistrict
+              ? ` District: ${toDistrict?.title} | id: ${toDistrict?.id}`
+              : `  Station: ${toStation?.title} | id: ${toStation?.id}`
+          }`
+        : ""}
       <hr />
       <br></br>
       {!fromText &&
@@ -93,9 +98,14 @@ export default function DestinationPicker() {
           stations: stations,
           onSelect: fromSelectHandler,
         })}
+      {console.log(toText, destStations)}
       {!toText &&
         destStations &&
-        ToPicker(toInput, destStations, toSelectHandler)}
+        ToPicker({
+          keyWord: toInput,
+          stations: destStations,
+          onToSelect: toSelectHandler,
+        })}
     </>
   );
 }
@@ -107,32 +117,16 @@ const ToPicker = ({ keyWord, stations, onToSelect }) => {
       st.title?.toLowerCase()?.includes(tKeyWord) ||
       st.titleBn?.toLowerCase()?.includes(tKeyWord)
   );
-  return <>
-    {nlStations.map(st=>{
-      return <>
-      DistrictPreview(st.district,onToSelect);
-      StationPreview(st,onToSelect,true);
-      </>;
-    })}
-  </>;
-  // const nlDistricts = districts || [];
-  // if(!tKeyWord || tKeyWord.length < 2){
-  //   return null;
-  // }
-
-  // const matchingDistricts = nlDistricts.filter(
-  //   e => e.title?.toLowerCase()?.includes(tKeyWord) || e.titleBn?.toLowerCase()?.includes(tKeyWord)
-  // );
-
-  // matchingDistricts.forEach(dist => dist.stations =  nlStations.filter(st=> st.districtId === dist.id));
-  // const matchingDistrictIds = matchingDistricts.map(dist=> dist.id) || [];
-  // const matchingStations = nlStations.filter(
-  //   st => (st.title?.toLowerCase()?.includes(tKeyWord) || st.titleBn?.toLowerCase()?.includes(tKeyWord)) && !matchingDistrictIds.includes(st.districtId)
-  // );
-  // return <>
-  //   {matchingDistricts.map(e => DistrictPreview({district:e,onSelect}))}
-  //   {matchingStations.map(st => StationPreview(st,onSelect,false))}
-  // </>
+  return (
+    <>
+      {nlStations.map((st) => {
+        const dist = st.district;
+        dist.stations = [st];
+        console.log(dist);
+        return DistrictPreview({ district: dist, onSelect: onToSelect });
+      })}
+    </>
+  );
 };
 
 const FromPicker = ({ keyWord, districts, stations, onSelect }) => {
@@ -163,11 +157,16 @@ const FromPicker = ({ keyWord, districts, stations, onSelect }) => {
   return (
     <>
       {matchingDistricts.map((e) => DistrictPreview({ district: e, onSelect }))}
-      {matchingStations.map((st) => StationPreview(st, onSelect, false))}
+      {matchingStations.map((st) =>
+        StationPreview({
+          station: st,
+          onSelect: onSelect,
+          isWithDistrict: false,
+        })
+      )}
     </>
   );
 };
-
 // DL : district logo
 const DistrictPreview = ({ district, onSelect }) => {
   const districtView = (
@@ -181,13 +180,19 @@ const DistrictPreview = ({ district, onSelect }) => {
     <div key={district?.id}>
       <br></br>
       {districtView}
-      {stations.map((st) => StationPreview(st, onSelect, true))}
+      {stations.map((st) =>
+        StationPreview({
+          station: st,
+          onSelect: onSelect,
+          isWithDistrict: true,
+        })
+      )}
     </div>
   );
 };
 
 // SL : Station logo
-const StationPreview = (station, onSelect, isWithDistrict) => {
+const StationPreview = ({ station, onSelect, isWithDistrict }) => {
   const stationView = (
     <button
       onClick={() => onSelect(station, false)}
