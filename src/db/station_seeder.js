@@ -81,7 +81,7 @@ const saveStationData = async (
         shortCode: stationItem.short_code,
         travelModeName: stationItem.travel_mode,
         districtId: stationItem.district_id,
-        district: allDistricts.find((el) => el.id === stationItem.district_id),
+        // district: allDistricts.find((el) => el.id === stationItem.district_id),
         to: stationItem.to,
       };
 
