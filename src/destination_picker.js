@@ -1,5 +1,8 @@
 import { useEffect, useState } from "react";
 import { useIndexedDB } from "react-indexed-db-hook";
+import { FaBus } from "react-icons/fa";
+import { IoMdBusiness } from "react-icons/io";
+
 
 export default function DestinationPicker() {
   const { getAll: getAllDistrict } = useIndexedDB("district");
@@ -167,12 +170,11 @@ const FromPicker = ({ keyWord, districts, stations, onSelect }) => {
     </>
   );
 };
-// DL : district logo
 const DistrictPreview = ({ district, onSelect }) => {
   const districtView = (
     <button
       onClick={() => onSelect(district, true)}
-    >{`DL ${district?.title} - All Station`}</button>
+    > <IoMdBusiness/>{` ${district?.title} - All Station`}</button>
   );
   const stations = district.stations || [];
 
@@ -196,7 +198,7 @@ const StationPreview = ({ station, onSelect, isWithDistrict }) => {
   const stationView = (
     <button
       onClick={() => onSelect(station, false)}
-    >{`SL ${station?.title} : ${station?.shortCode} `}</button>
+    ><FaBus/>{`  ${station?.title} : ${station?.shortCode} `}</button>
   );
 
   return (
