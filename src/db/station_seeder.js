@@ -1,5 +1,5 @@
 import { useIndexedDB } from "react-indexed-db-hook";
-import useHttp from "./hooks/use-http";
+import useHttp from "../hooks/use-http";
 import React, { useEffect } from "react";
 
 const stationUrl =
@@ -43,7 +43,7 @@ const saveStationData = async (
   clearDistrict,
   clearStation
 ) => {
-  const stationItems = tasksObj?.data ?? [];
+  const stationItems = tasksObj?.data?.items ?? [];
 
   console.log(stationItems.length);
 

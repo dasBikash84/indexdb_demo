@@ -1,15 +1,15 @@
 import React from "react";
 import { initDB } from "react-indexed-db-hook";
 import { DBConfig } from "./db/DBConfig";
-import PanelExample from "./db_logger_component";
-import StationSeeder from "./station_seeder";
+import DestinationPicker from "./destination_picker";
+import StationSeeder from "./db/station_seeder";
 
 initDB(DBConfig);
 
 function App() {
   return (
     <StationSeeder>
-      <PanelExample />
+      <DestinationPicker />
     </StationSeeder>
   );
 }
