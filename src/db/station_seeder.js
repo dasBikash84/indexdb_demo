@@ -81,7 +81,7 @@ const saveStationData = async (
         shortCode: stationItem.short_code,
         travelModeName: stationItem.travel_mode,
         districtId: stationItem.district_id,
-        // district: allDistricts.find((el) => el.id === stationItem.district_id),
+        district: allDistricts.find((el) => el.id === stationItem.district_id),
         to: stationItem.to,
       };
 
@@ -99,17 +99,17 @@ const saveStationData = async (
   console.log(allStations.length);
 
   for (const dist of allDistricts) {
+    const allTo = [];
     allStations
-      .filter((el) => el.districtId === dist.id)
-      .forEach((el) => {
-        const allTo = [];
-        for (const toId of el.to) {
+      .filter((st) => st.districtId === dist.id)
+      .forEach((st) => {
+        for (const toId of st.to) {
           if (!allTo.includes(toId)) {
             allTo.push(toId);
           }
         }
-        dist.to = allTo;
       });
+    dist.to = allTo;
     try {
       await addDistrict(dist);
     } catch (error) {

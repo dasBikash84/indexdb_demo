@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import { useIndexedDB } from "react-indexed-db-hook";
 
 export default function DestinationPicker() {
-  const { getAll:getAllDistrict } = useIndexedDB("district");
-  const { getAll:getAllStation } = useIndexedDB("station");
+  const { getAll: getAllDistrict } = useIndexedDB("district");
+  const { getAll: getAllStation } = useIndexedDB("station");
 
-
+  const [destStations, setDestStations] = useState();
 
   const [fromDistrict, setFromDistrict] = useState();
   const [fromStation, setFromStation] = useState();
@@ -27,7 +27,7 @@ export default function DestinationPicker() {
       // setFromStation(allStations[0]);
       // setToStation(allStations[10]);
     })();
-  }, [getAllDistrict,getAllStation]);
+  }, [getAllDistrict, getAllStation]);
 
   const fromInputHandler = (event) => {
     setFromInput(event.target.value);
@@ -37,85 +37,172 @@ export default function DestinationPicker() {
     setToInput(event.target.value);
   };
 
-  const fromSelectHandler = (item,isDistrict) => {
-    if(isDistrict){
+  const fromSelectHandler = (item, isDistrict) => {
+    if (isDistrict) {
       setFromDistrict(item);
-    }else{
+    } else {
       setFromStation(item);
+    }
+    setDestStations(stations.filter((st) => (item.to || []).includes(st.id)));
+  };
+
+  const toSelectHandler = (item, isDistrict) => {
+    if (isDistrict) {
+      setToDistrict(item);
+    } else {
+      setToStation(item);
     }
   };
 
   const fromText = fromDistrict?.title || fromStation?.title;
   const toText = toDistrict?.title || toStation?.title;
-
-
+  console.log(destStations);
   return (
     <>
       <br></br>
-      <label htmlFor='from'> From: </label> 
-      <input name="from" value={fromText ?? fromInput} onChange={fromInputHandler}  disabled = {fromText} />      
-      {fromText ? `${fromDistrict ? ` District: ${JSON.stringify(fromDistrict)}` : `  Station ${JSON.stringify(fromStation)}`}` : ''}
+      <label htmlFor="from"> From: </label>
+      <input
+        name="from"
+        value={fromText ?? fromInput}
+        onChange={fromInputHandler}
+        disabled={fromText}
+      />
+      {fromText
+        ? `${
+            fromDistrict
+              ? ` District: ${fromDistrict?.title} | id: ${fromDistrict?.id}`
+              : `  Station: ${fromStation?.title} | id: ${fromStation?.id}`
+          }`
+        : ""}
       <br></br>
       <br></br>
-      <label htmlFor='to'> To: </label> 
-      <input name="to" value={toText ?? toInput} onChange={toInputHandler}  disabled = {toText}/>
-      {toText ? `${toDistrict ? ' District' : ' Station'}` : ''}
+      <label htmlFor="to"> To: </label>
+      <input
+        name="to"
+        value={toText ?? toInput}
+        onChange={toInputHandler}
+        disabled={!fromText && !toText}
+      />
+      {toText ? `${toDistrict ? " District" : " Station"}` : ""}
       <hr />
       <br></br>
-      {fromText ? '' : FromPicker({
-        keyWord: fromInput,
-        districts: districts,
-        stations:stations,
-        onSelect:fromSelectHandler
-      })}
+      {!fromText &&
+        FromPicker({
+          keyWord: fromInput,
+          districts: districts,
+          stations: stations,
+          onSelect: fromSelectHandler,
+        })}
+      {!toText &&
+        destStations &&
+        ToPicker(toInput, destStations, toSelectHandler)}
     </>
   );
 }
 
-const FromPicker = ({keyWord,districts,stations,onSelect})=>{
+const ToPicker = ({ keyWord, stations, onToSelect }) => {
+  const tKeyWord = keyWord?.toLowerCase()?.trim() || "";
+  const nlStations = (stations || []).filter(
+    (st) =>
+      st.title?.toLowerCase()?.includes(tKeyWord) ||
+      st.titleBn?.toLowerCase()?.includes(tKeyWord)
+  );
+  return <>
+    {nlStations.map(st=>{
+      return <>
+      DistrictPreview(st.district,onToSelect);
+      StationPreview(st,onToSelect,true);
+      </>;
+    })}
+  </>;
+  // const nlDistricts = districts || [];
+  // if(!tKeyWord || tKeyWord.length < 2){
+  //   return null;
+  // }
+
+  // const matchingDistricts = nlDistricts.filter(
+  //   e => e.title?.toLowerCase()?.includes(tKeyWord) || e.titleBn?.toLowerCase()?.includes(tKeyWord)
+  // );
+
+  // matchingDistricts.forEach(dist => dist.stations =  nlStations.filter(st=> st.districtId === dist.id));
+  // const matchingDistrictIds = matchingDistricts.map(dist=> dist.id) || [];
+  // const matchingStations = nlStations.filter(
+  //   st => (st.title?.toLowerCase()?.includes(tKeyWord) || st.titleBn?.toLowerCase()?.includes(tKeyWord)) && !matchingDistrictIds.includes(st.districtId)
+  // );
+  // return <>
+  //   {matchingDistricts.map(e => DistrictPreview({district:e,onSelect}))}
+  //   {matchingStations.map(st => StationPreview(st,onSelect,false))}
+  // </>
+};
+
+const FromPicker = ({ keyWord, districts, stations, onSelect }) => {
   const tKeyWord = keyWord?.toLowerCase()?.trim();
   const nlDistricts = districts || [];
   const nlStations = stations || [];
-  if(!tKeyWord || tKeyWord.length < 2){
+  if (!tKeyWord || tKeyWord.length < 2) {
     return null;
   }
 
   const matchingDistricts = nlDistricts.filter(
-    e => e.title?.toLowerCase()?.includes(tKeyWord) || e.titleBn?.toLowerCase()?.includes(tKeyWord)
+    (e) =>
+      e.title?.toLowerCase()?.includes(tKeyWord) ||
+      e.titleBn?.toLowerCase()?.includes(tKeyWord)
   );
-  
-  matchingDistricts.forEach(dist => dist.stations =  nlStations.filter(st=> st.districtId === dist.id));
-  const matchingDistrictIds = matchingDistricts.map(dist=> dist.id) || [];
+
+  matchingDistricts.forEach(
+    (dist) =>
+      (dist.stations = nlStations.filter((st) => st.districtId === dist.id))
+  );
+  const matchingDistrictIds = matchingDistricts.map((dist) => dist.id) || [];
   const matchingStations = nlStations.filter(
-    st => (st.title?.toLowerCase()?.includes(tKeyWord) || st.titleBn?.toLowerCase()?.includes(tKeyWord)) && !matchingDistrictIds.includes(st.districtId)
+    (st) =>
+      (st.title?.toLowerCase()?.includes(tKeyWord) ||
+        st.titleBn?.toLowerCase()?.includes(tKeyWord)) &&
+      !matchingDistrictIds.includes(st.districtId)
   );
-  return <div>
-    {matchingDistricts.map(e => DistrictPreview({district:e,onSelect}))}
-    {matchingStations.map(st => StationPreview(st,onSelect,false))}
-  </div> 
+  return (
+    <>
+      {matchingDistricts.map((e) => DistrictPreview({ district: e, onSelect }))}
+      {matchingStations.map((st) => StationPreview(st, onSelect, false))}
+    </>
+  );
 };
 
 // DL : district logo
-const DistrictPreview = ({district,onSelect})=>{
-
-  const districtView = <button onClick={()=> onSelect(district,true) }>{`DL ${district?.title} - All Station`}</button>;
+const DistrictPreview = ({ district, onSelect }) => {
+  const districtView = (
+    <button
+      onClick={() => onSelect(district, true)}
+    >{`DL ${district?.title} - All Station`}</button>
+  );
   const stations = district.stations || [];
-  
-  return <div key={district?.id}>
-    <br></br>
-    {districtView}
-    {stations.map(st => StationPreview(st,onSelect,true))}
-  </div>;
+
+  return (
+    <div key={district?.id}>
+      <br></br>
+      {districtView}
+      {stations.map((st) => StationPreview(st, onSelect, true))}
+    </div>
+  );
 };
 
 // SL : Station logo
-const StationPreview = (station,onSelect,isWithDistrict)=>{
+const StationPreview = (station, onSelect, isWithDistrict) => {
+  const stationView = (
+    <button
+      onClick={() => onSelect(station, false)}
+    >{`SL ${station?.title} : ${station?.shortCode} `}</button>
+  );
 
-  const stationView = <button onClick={()=> onSelect(station,false) }>{`SL ${station?.title} : ${station?.shortCode} `}</button>;
-  
-  return <div key={station?.id}>
-    <br></br>
-    <span dangerouslySetInnerHTML={{__html: isWithDistrict ? '&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;' : ''}} />
-    {stationView}
-  </div>;
+  return (
+    <div key={station?.id}>
+      <br></br>
+      <span
+        dangerouslySetInnerHTML={{
+          __html: isWithDistrict ? "&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;" : "",
+        }}
+      />
+      {stationView}
+    </div>
+  );
 };
