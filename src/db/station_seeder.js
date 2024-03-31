@@ -10,7 +10,7 @@ const headers = {
   accept: "*/*",
 };
 
-export default function StationSeeder(props) {
+export default function StationSeeder({onDataLoad,children}) {
   const { add: addDistrict, clear: clearDistrict } = useIndexedDB("district");
   const { add: addStation, clear: clearStation } = useIndexedDB("station");
 
@@ -28,12 +28,13 @@ export default function StationSeeder(props) {
           addDistrict,
           addStation,
           clearDistrict,
-          clearStation
+          clearStation,
+          onDataLoad
         );
       }
     );
   }, [stationUrl]);
-  return <React.Fragment>{props.children}</React.Fragment>;
+  return <React.Fragment>{children}</React.Fragment>;
 }
 
 const saveStationData = async (
@@ -41,7 +42,8 @@ const saveStationData = async (
   addDistrict,
   addStation,
   clearDistrict,
-  clearStation
+  clearStation,
+  onDataLoad
 ) => {
   const stationItems = tasksObj?.data?.items ?? [];
 
@@ -116,4 +118,5 @@ const saveStationData = async (
       console.log(error);
     }
   }
+  onDataLoad();
 };
